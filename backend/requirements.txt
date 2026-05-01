@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic[email]
+python-jose[cryptography]   # JWT
+passlib[bcrypt]             # password hashing
+yfinance
+pandas
+numpy
+scikit-learn
+pyarrow                     # parquet read/write
+apscheduler
+python-dotenv
+anthropic                   # Claude API — needed Day 9
