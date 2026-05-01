@@ -1,4 +1,0 @@
-# .env.example
-JWT_SECRET=your-secret-key-here
-ANTHROPIC_API_KEY=your-key-here
-ENVIRONMENT=development
