@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SECTORS } from '../constants/sectors';
+import {
+  MARKET_CAP_DISCLAIMER,
+  MARKET_CAP_PREFERENCES,
+} from '../constants/marketCapPreference';
 import { RISK_LEVELS } from '../constants/riskLevels';
 
 export default function OnboardingPage() {
@@ -8,6 +12,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [sectors, setSectors] = useState([]);
   const [risk, setRisk] = useState('medium');
+  const [capPreference, setCapPreference] = useState('');
   const [minPrice, setMinPrice] = useState(25);
   const [maxPrice, setMaxPrice] = useState(400);
   const [dividend, setDividend] = useState(0.45);
@@ -20,7 +25,8 @@ export default function OnboardingPage() {
 
   function next() {
     if (step === 1 && sectors.length === 0) return;
-    if (step < 3) setStep(step + 1);
+    if (step === 3 && !capPreference) return;
+    if (step < 4) setStep(step + 1);
   }
 
   function back() {
@@ -33,18 +39,24 @@ export default function OnboardingPage() {
   }
 
   const stepValid =
-    step === 1 ? sectors.length >= 1 : step === 2 ? Boolean(risk) : true;
+    step === 1
+      ? sectors.length >= 1
+      : step === 2
+        ? Boolean(risk)
+        : step === 3
+          ? Boolean(capPreference)
+          : true;
 
   return (
     <div className="min-h-screen bg-zinc-900 px-4 py-10">
       <div className="mx-auto max-w-xl">
         <h1 className="text-center text-2xl font-semibold text-white">Tailor your feed</h1>
         <p className="mt-2 text-center text-sm text-zinc-400">
-          Step {step} of 3 — we use this to rank recommendations.
+          Step {step} of 4 — we use this to rank recommendations.
         </p>
 
         <div className="mt-8 flex gap-2">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className={`h-1 flex-1 rounded-full ${
@@ -106,6 +118,40 @@ export default function OnboardingPage() {
           )}
 
           {step === 3 && (
+            <div>
+              <h2 className="text-lg font-medium text-white">Company size</h2>
+              <p className="mt-1 text-sm text-zinc-400">
+                Do you want more mid-cap or large-cap names in your feed?
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {MARKET_CAP_PREFERENCES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCapPreference(c.id)}
+                    className={`rounded-lg border p-4 text-left transition ${
+                      capPreference === c.id
+                        ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500/40'
+                        : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
+                    }`}
+                  >
+                    <p className="font-semibold text-white">{c.label}</p>
+                    <p className="mt-1 text-sm font-semibold text-zinc-200">
+                      {c.approxRangeLabel}
+                    </p>
+                    <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+                      {c.description}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-zinc-500">
+                {MARKET_CAP_DISCLAIMER}
+              </p>
+            </div>
+          )}
+
+          {step === 4 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-medium text-white">Price range</h2>
@@ -170,7 +216,7 @@ export default function OnboardingPage() {
             ) : (
               <span />
             )}
-            {step < 3 ? (
+            {step < 4 ? (
               <button
                 type="button"
                 disabled={!stepValid}
