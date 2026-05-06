@@ -6,3 +6,9 @@ ideas/notes for improvements:
 
 
 
+The natural next steps, in order:
+
+Finish 02_feature_engineering.ipynb — backend/notebooks/02_feature_engineering.ipynb — transform raw price data into a feature matrix
+Add an 03_model.ipynb — train a recommendation/scoring model on the feature matrix
+Wire up backend routers — the four TODOs in backend/main.py:4 (stocks, recommendations, portfolio, sectors)
+Replace frontend stub data — swap src/api/api.js placeholder payloads with real FastAPI calls

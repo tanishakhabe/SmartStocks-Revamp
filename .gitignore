@@ -17,6 +17,7 @@ __pycache__/
 .ipynb_checkpoints/
 # stray parquet dir if kernel cwd was backend/notebooks/ with Path("data") — canonical path is backend/data/
 backend/notebooks/data/
+backend/data/scaler.pkl
 
 # frontend (already has these but being explicit)
 node_modules/
