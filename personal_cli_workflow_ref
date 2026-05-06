@@ -1,0 +1,16 @@
+**Before you open the notebook**, make sure your Python environment is set up:
+
+```bash
+cd SmartStocks-Revamp
+python -m venv venv
+source venv/bin/activate
+pip install yfinance pandas numpy matplotlib pyarrow jupyter
+jupyter notebook
+```
+
+
+```bash
+git add notebooks/01_data_ingestion.ipynb
+git commit -m "Day 2: data ingestion notebook complete"
+```
+

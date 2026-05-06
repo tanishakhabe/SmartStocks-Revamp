@@ -5,7 +5,9 @@ dist
 
 # backend
 backend/smartstocks.db
+# Generated datasets (notebook parquet output lives under backend/data/)
 backend/data/
+backend/**/*.parquet
 backend/.env
 __pycache__/
 *.pyc
@@ -13,6 +15,8 @@ __pycache__/
 
 # notebooks
 .ipynb_checkpoints/
+# stray parquet dir if kernel cwd was backend/notebooks/ with Path("data") — canonical path is backend/data/
+backend/notebooks/data/
 
 # frontend (already has these but being explicit)
 node_modules/
