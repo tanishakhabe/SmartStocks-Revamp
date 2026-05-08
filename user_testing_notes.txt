@@ -1,0 +1,2 @@
+# 5/7
+# notes: make sector analysis momentum font NOT BLACK and also volatility and momentum graph has volatility twice
