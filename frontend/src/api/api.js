@@ -11,6 +11,8 @@ import {
 } from '../constants/placeholderData';
 import { SECTORS } from '../constants/sectors';
 
+const API_BASE = 'http://localhost:8000';
+
 const delay = (ms = 180) => new Promise((r) => setTimeout(r, ms));
 
 function clone(data) {
@@ -18,44 +20,83 @@ function clone(data) {
 }
 
 export function getRecommendations() {
-  return delay().then(() => clone(DASHBOARD_CARD_STOCKS));
+  // Read user profile from localStorage (saved during onboarding)
+  const profileStr = localStorage.getItem('userProfile');
+  if (!profileStr) {
+    // Fallback to placeholder if no profile saved yet
+    return delay().then(() => clone(DASHBOARD_CARD_STOCKS));
+  }
+
+  const profile = JSON.parse(profileStr);
+
+  // POST to /recommend endpoint
+  return fetch(`${API_BASE}/recommend/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sectors: profile.sectors,
+      risk_tolerance: profile.risk_tolerance,
+      growth_profile: profile.growth_profile,
+      investment_horizon: profile.investment_horizon,
+    }),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      // Convert backend response to dashboard card format
+      return data.recommendations.map((rec) => ({
+        ticker: rec.ticker,
+        name: rec.ticker, // Will be fetched separately if needed
+        price: 0,
+        change: 0,
+        changePercent: 0,
+        matchPercent: rec.match_pct,
+      }));
+    });
 }
 
 export function getQuote(ticker) {
   const upper = String(ticker || '').toUpperCase();
-  const stock =
-    PLACEHOLDER_STOCKS.find((s) => s.ticker === upper) || PLACEHOLDER_STOCKS[0];
-  return delay().then(() =>
-    clone({
-      ...stock,
-      volume: 48_200_000,
-      marketCap: '2.95T',
-      peRatio: 31.2,
-      week52High: stock.price * 1.08,
-      week52Low: stock.price * 0.82,
-      dividendYield: 0.52,
+
+  return fetch(`${API_BASE}/stock/${upper}`)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Ticker ${upper} not found`);
+      return res.json();
     })
-  );
+    .then((data) => ({
+      ticker: data.ticker,
+      name: data.name,
+      sector: data.sector,
+      price: data.price,
+      change: 0, // Will calculate from change_pct if needed
+      changePercent: data.change_pct,
+      volume: data.volume,
+      marketCap: data.market_cap,
+      peRatio: data.pe_ratio,
+      week52High: data.week_52_high,
+      week52Low: data.week_52_low,
+      dividendYield: data.dividend_yield,
+    }));
 }
 
 export function getHistory(ticker, range = '1M') {
   const upper = String(ticker || '').toUpperCase();
-  const stock =
-    PLACEHOLDER_STOCKS.find((s) => s.ticker === upper) || PLACEHOLDER_STOCKS[0];
-  const base = stock.price * 0.92;
-  const series = generateSinWaveSeries(50, base, stock.price * 0.06);
-  return delay().then(() =>
-    clone({
+
+  return fetch(`${API_BASE}/stock/${upper}`)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Ticker ${upper} not found`);
+      return res.json();
+    })
+    .then((data) => ({
       ticker: upper,
       range,
-      points: series.map((p, i) => ({
-        ...p,
-        date: `2024-${String((i % 12) + 1).padStart(2, '0')}-${String(
-          (i % 28) + 1
-        ).padStart(2, '0')}`,
+      points: data.history.map((point) => ({
+        date: point.date,
+        price: point.price,
       })),
-    })
-  );
+    }));
 }
 
 export function getSectors() {
