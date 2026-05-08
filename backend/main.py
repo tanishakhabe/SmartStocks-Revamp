@@ -1,32 +1,32 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
-# from routers import stocks, recommendations, portfolio, sectors  # uncomment Day 6
+from routers import recommend, stocks
 
 app = FastAPI(title="SmartStocks API")
 
-# CORS middleware
-origins = [
-    "http://localhost:5173",
-]
-
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Allows the Vite dev server (port 5173) to call this API.
+# Without this the browser blocks cross-origin requests.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
     init_db()
 
+# ── Routes ────────────────────────────────────────────────────────────────────
+# prefix="/recommend" means the router's POST "/" becomes POST "/recommend/"
+# prefix="/stock"     means GET "/{ticker}" becomes GET "/stock/{ticker}"
+app.include_router(recommend.router, prefix="/recommend", tags=["recommend"])
+app.include_router(stocks.router,    prefix="/stock",     tags=["stocks"])
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
-# TODO Day 6: app.include_router(stocks.router, prefix="/stocks")
-# TODO Day 6: app.include_router(recommendations.router, prefix="/recommend")
-# TODO Day 6: app.include_router(portfolio.router, prefix="/portfolio")
-# TODO Day 6: app.include_router(sectors.router, prefix="/sectors")

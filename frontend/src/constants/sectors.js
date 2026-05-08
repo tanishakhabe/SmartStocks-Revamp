@@ -2,11 +2,11 @@ export const SECTORS = [
   'Technology',
   'Healthcare',
   'Financials',
-  'Consumer Cyclical',
-  'Consumer Defensive',
+  'Consumer Discretionary',
+  'Consumer Staples',
   'Energy',
-  'Industrials',
-  'Utilities',
-  'Communication Services',
+  'Industrials', 
   'Materials',
+  'Utilities',
+  'Real Estate'
 ];

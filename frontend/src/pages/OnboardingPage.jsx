@@ -2,20 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SECTORS } from '../constants/sectors';
 import {
-  MARKET_CAP_DISCLAIMER,
-  MARKET_CAP_PREFERENCES,
-} from '../constants/marketCapPreference';
+  GROWTH_PROFILE
+} from '../constants/ProfilePreferences';
 import { RISK_LEVELS } from '../constants/riskLevels';
+import { INVESTMENT_HORIZON } from '../constants/investmentHorizon';
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [sectors, setSectors] = useState([]);
-  const [risk, setRisk] = useState('medium');
+  const [risk, setRisk] = useState('');
   const [capPreference, setCapPreference] = useState('');
-  const [minPrice, setMinPrice] = useState(25);
-  const [maxPrice, setMaxPrice] = useState(400);
-  const [dividend, setDividend] = useState(0.45);
+  const [investmentHorizon, setInvestmentHorizon] = useState('');
 
   function toggleSector(s) {
     setSectors((prev) =>
@@ -25,6 +23,7 @@ export default function OnboardingPage() {
 
   function next() {
     if (step === 1 && sectors.length === 0) return;
+    if (step === 2 && !risk) return;
     if (step === 3 && !capPreference) return;
     if (step < 4) setStep(step + 1);
   }
@@ -35,7 +34,9 @@ export default function OnboardingPage() {
 
   function finish(e) {
     e.preventDefault();
-    navigate('/dashboard');
+    if (step === 4 && investmentHorizon) {
+      navigate('/dashboard');
+    }
   }
 
   const stepValid =
@@ -45,14 +46,16 @@ export default function OnboardingPage() {
         ? Boolean(risk)
         : step === 3
           ? Boolean(capPreference)
-          : true;
+          : step === 4
+            ? Boolean(investmentHorizon)
+            : true;
 
   return (
     <div className="min-h-screen bg-zinc-900 px-4 py-10">
       <div className="mx-auto max-w-xl">
         <h1 className="text-center text-2xl font-semibold text-white">Tailor your feed</h1>
         <p className="mt-2 text-center text-sm text-zinc-400">
-          Step {step} of 4 — we use this to rank recommendations.
+          Step {step} of 4
         </p>
 
         <div className="mt-8 flex gap-2">
@@ -95,7 +98,7 @@ export default function OnboardingPage() {
 
           {step === 2 && (
             <div>
-              <h2 className="text-lg font-medium text-white">Risk tolerance</h2>
+              <h2 className="text-lg font-medium text-white">Risk Tolerance</h2>
               <p className="mt-1 text-sm text-zinc-400">How much volatility fits your plan?</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {RISK_LEVELS.map((r) => (
@@ -119,12 +122,12 @@ export default function OnboardingPage() {
 
           {step === 3 && (
             <div>
-              <h2 className="text-lg font-medium text-white">Company size</h2>
+              <h2 className="text-lg font-medium text-white">Profile</h2>
               <p className="mt-1 text-sm text-zinc-400">
-                Do you want more mid-cap or large-cap names in your feed?
+                Do you want growth stocks vs. balanced stocks vs. income stocks? 
               </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {MARKET_CAP_PREFERENCES.map((c) => (
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {GROWTH_PROFILE.map((c) => (
                   <button
                     key={c.id}
                     type="button"
@@ -136,70 +139,47 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <p className="font-semibold text-white">{c.label}</p>
-                    <p className="mt-1 text-sm font-semibold text-zinc-200">
-                      {c.approxRangeLabel}
-                    </p>
                     <p className="mt-2 text-xs leading-relaxed text-zinc-400">
                       {c.description}
                     </p>
                   </button>
                 ))}
               </div>
-              <p className="mt-4 text-xs leading-relaxed text-zinc-500">
-                {MARKET_CAP_DISCLAIMER}
-              </p>
             </div>
           )}
 
           {step === 4 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-lg font-medium text-white">Price range</h2>
-                <p className="mt-1 text-sm text-zinc-400">Typical share prices you consider.</p>
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="min-p" className="text-sm text-zinc-400">
-                      Min ($)
-                    </label>
-                    <input
-                      id="min-p"
-                      type="number"
-                      min={0}
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(Number(e.target.value))}
-                      className="mt-1 w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500/40"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="max-p" className="text-sm text-zinc-400">
-                      Max ($)
-                    </label>
-                    <input
-                      id="max-p"
-                      type="number"
-                      min={0}
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(Number(e.target.value))}
-                      className="mt-1 w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500/40"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div>
+            <div>
+              <h2 className="text-lg font-medium text-white">Investment Horizon</h2>
+              <p className="mt-1 text-sm text-zinc-400">How long do you plan to hold these investments?</p>
+              <div className="mt-6 space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-300">Dividend preference</span>
-                  <span className="font-medium text-blue-400">{dividend.toFixed(2)}</span>
+                  <span className="text-zinc-300">Years</span>
+                  <span className="font-medium text-blue-400">
+                    {investmentHorizon === 10 ? '10+ years' : `${investmentHorizon} year${investmentHorizon !== 1 ? 's' : ''}`}
+                  </span>
                 </div>
                 <input
                   type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={dividend}
-                  onChange={(e) => setDividend(Number(e.target.value))}
-                  className="mt-3 w-full accent-blue-500"
+                  min={1}
+                  max={10}
+                  value={investmentHorizon || 5}
+                  onChange={(e) => setInvestmentHorizon(Number(e.target.value))}
+                  className="w-full accent-blue-500"
                 />
-                <p className="mt-1 text-xs text-zinc-500">0 = growth focus, 1 = income focus</p>
+                <div className="flex justify-between text-xs text-zinc-500">
+                  <span>1 year</span>
+                  <span>10+ years</span>
+                </div>
+                <div className="mt-4 rounded-lg border border-zinc-700 bg-zinc-800 p-3">
+                  <p className="text-xs font-medium text-zinc-300">
+                    {investmentHorizon <= 2 
+                      ? INVESTMENT_HORIZON[0].description 
+                      : investmentHorizon <= 5 
+                        ? INVESTMENT_HORIZON[1].description 
+                        : INVESTMENT_HORIZON[2].description}
+                  </p>
+                </div>
               </div>
             </div>
           )}
