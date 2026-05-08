@@ -35,6 +35,13 @@ export default function OnboardingPage() {
   function finish(e) {
     e.preventDefault();
     if (step === 4 && investmentHorizon) {
+      // Save quiz answers to localStorage for API call
+      localStorage.setItem('userProfile', JSON.stringify({
+        sectors,
+        risk_tolerance: risk,
+        growth_profile: capPreference,
+        investment_horizon: investmentHorizon,
+      }));
       navigate('/dashboard');
     }
   }
