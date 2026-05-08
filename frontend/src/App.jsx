@@ -4,9 +4,7 @@ import { useAuth } from './context/AuthContext';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
-import PortfolioSimulatorPage from './pages/PortfolioSimulatorPage';
 import RegisterPage from './pages/RegisterPage';
-import SectorAnalysisPage from './pages/SectorAnalysisPage';
 import StockDetailPage from './pages/StockDetailPage';
 import WatchlistPage from './pages/WatchlistPage';
 
@@ -57,8 +55,6 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage isLoading={false} />} />
         <Route path="/stock/:ticker" element={<StockDetailPage />} />
         <Route path="/watchlist" element={<WatchlistPage />} />
-        <Route path="/sectors" element={<SectorAnalysisPage />} />
-        <Route path="/portfolio" element={<PortfolioSimulatorPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

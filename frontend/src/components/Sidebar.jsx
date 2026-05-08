@@ -4,9 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const links = [
   { to: '/dashboard', label: 'Dashboard' },
-  { to: '/watchlist', label: 'Watchlist' },
-  { to: '/sectors', label: 'Sector Analysis' },
-  { to: '/portfolio', label: 'Portfolio' },
+  { to: '/watchlist', label: 'Watchlist' }
 ];
 
 export default function Sidebar() {
