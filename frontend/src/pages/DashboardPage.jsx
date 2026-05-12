@@ -4,8 +4,9 @@ import StockCard from '../components/StockCard';
 import { SECTORS } from '../constants/sectors';
 import { useStocks } from '../hooks/useStocks';
 
-export default function DashboardPage({ isLoading = false }) {
-  const { recommendations } = useStocks();
+export default function DashboardPage({ isLoading: isLoadingProp = false }) {
+  const { recommendations, isLoading: stocksLoading, error } = useStocks();
+  const isLoading = isLoadingProp || stocksLoading;
   const [query, setQuery] = useState('');
   const [sectorFilter, setSectorFilter] = useState('All');
 
@@ -26,6 +27,12 @@ export default function DashboardPage({ isLoading = false }) {
       <div className="border-b border-zinc-800 bg-zinc-900/95 pb-6 pt-2 md:pt-0">
         <h1 className="text-xl font-semibold text-white md:text-2xl">Dashboard</h1>
         <p className="mt-1 text-sm text-zinc-400">Personalized picks based on your profile.</p>
+
+        {error ? (
+          <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            {error}
+          </div>
+        ) : null}
 
         <div className="relative mt-6 max-w-xl">
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-500">
@@ -82,9 +89,16 @@ export default function DashboardPage({ isLoading = false }) {
           : filtered.map((stock) => <StockCard key={stock.ticker} stock={stock} />)}
       </div>
 
-      {!isLoading && filtered.length === 0 ? (
+      {!isLoading && filtered.length === 0 && recommendations.length > 0 ? (
         <p className="mt-8 text-center text-sm text-zinc-500">
           No matches for this filter. Try another sector or search term.
+        </p>
+      ) : null}
+
+      {!isLoading && recommendations.length === 0 && !error ? (
+        <p className="mt-8 text-center text-sm text-zinc-500">
+          No recommendations to show. Finish onboarding to save your preferences, or confirm the
+          backend is running with model data under <code className="text-zinc-400">backend/data/</code>.
         </p>
       ) : null}
     </div>

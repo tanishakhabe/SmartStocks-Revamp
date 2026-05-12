@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SECTORS } from '../constants/sectors';
-import {
-  GROWTH_PROFILE
-} from '../constants/ProfilePreferences';
+import { GROWTH_PROFILE } from '../constants/ProfilePreferences';
 import { RISK_LEVELS } from '../constants/riskLevels';
 import { INVESTMENT_HORIZON } from '../constants/investmentHorizon';
+import { saveRecommendPreferences } from '../utils/recommendPreferences';
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -13,7 +12,7 @@ export default function OnboardingPage() {
   const [sectors, setSectors] = useState([]);
   const [risk, setRisk] = useState('');
   const [capPreference, setCapPreference] = useState('');
-  const [investmentHorizon, setInvestmentHorizon] = useState('');
+  const [investmentHorizon, setInvestmentHorizon] = useState(5);
 
   function toggleSector(s) {
     setSectors((prev) =>
@@ -34,16 +33,20 @@ export default function OnboardingPage() {
 
   function finish(e) {
     e.preventDefault();
-    if (step === 4 && investmentHorizon) {
-      // Save quiz answers to localStorage for API call
-      localStorage.setItem('userProfile', JSON.stringify({
-        sectors,
-        risk_tolerance: risk,
-        growth_profile: capPreference,
-        investment_horizon: investmentHorizon,
-      }));
-      navigate('/dashboard');
-    }
+    if (step !== 4) return;
+    const horizon = Number(investmentHorizon);
+    const years =
+      Number.isFinite(horizon) && horizon >= 1 && horizon <= 10 ? horizon : 5;
+    const payload = {
+      sectors,
+      risk_tolerance: risk,
+      growth_profile: capPreference,
+      investment_horizon: years,
+    };
+    saveRecommendPreferences(payload);
+    // Legacy key — keep in sync in case older code reads `userProfile`
+    localStorage.setItem('userProfile', JSON.stringify(payload));
+    navigate('/dashboard');
   }
 
   const stepValid =
@@ -53,9 +56,7 @@ export default function OnboardingPage() {
         ? Boolean(risk)
         : step === 3
           ? Boolean(capPreference)
-          : step === 4
-            ? Boolean(investmentHorizon)
-            : true;
+          : true;
 
   return (
     <div className="min-h-screen bg-zinc-900 px-4 py-10">
@@ -170,7 +171,7 @@ export default function OnboardingPage() {
                   type="range"
                   min={1}
                   max={10}
-                  value={investmentHorizon || 5}
+                  value={investmentHorizon}
                   onChange={(e) => setInvestmentHorizon(Number(e.target.value))}
                   className="w-full accent-blue-500"
                 />

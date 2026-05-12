@@ -13,7 +13,7 @@ import {
 import ErrorBanner from '../components/ErrorBanner';
 import RangeSelector from '../components/RangeSelector';
 import StatPanel from '../components/StatPanel';
-import { getHistory, getQuote, addFavorite } from '../api/api';
+import { addFavorite, chartPointsFromHistory, getStockDetail } from '../api/api';
 
 function formatChange(pct) {
   const sign = pct >= 0 ? '+' : '';
@@ -26,22 +26,40 @@ export default function StockDetailPage() {
   const [sma20, setSma20] = useState(false);
   const [sma50, setSma50] = useState(false);
   const [quote, setQuote] = useState(null);
-  const [series, setSeries] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [loadError, setLoadError] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(true);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    setDetailLoading(true);
+    setLoadError(null);
+    setQuote(null);
+    setHistory([]);
     (async () => {
-      const [q, h] = await Promise.all([getQuote(ticker), getHistory(ticker, range)]);
-      if (cancelled) return;
-      setQuote(q);
-      setSeries(h.points || []);
+      try {
+        const { quote: q, history: h } = await getStockDetail(ticker);
+        if (cancelled) return;
+        setQuote(q);
+        setHistory(h);
+      } catch (e) {
+        if (cancelled) return;
+        setLoadError(e instanceof Error ? e.message : 'Failed to load stock');
+      } finally {
+        if (!cancelled) setDetailLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [ticker, range]);
+  }, [ticker]);
+
+  const series = useMemo(
+    () => chartPointsFromHistory(history, range),
+    [history, range]
+  );
 
   const chartData = useMemo(() => {
     return series.map((p, i) => ({
@@ -63,9 +81,16 @@ export default function StockDetailPage() {
           </span>
         ),
       },
-      { label: 'Volume', value: `${(quote.volume / 1e6).toFixed(1)}M` },
+      {
+        label: 'Volume',
+        value:
+          quote.volume > 0 ? `${(quote.volume / 1e6).toFixed(1)}M` : '—',
+      },
       { label: 'Market Cap', value: quote.marketCap },
-      { label: 'P/E Ratio', value: String(quote.peRatio) },
+      {
+        label: 'P/E Ratio',
+        value: quote.peRatio != null ? String(quote.peRatio) : 'N/A',
+      },
       {
         label: '52wk High',
         value: `$${quote.week52High.toFixed(2)}`,
@@ -76,7 +101,10 @@ export default function StockDetailPage() {
       },
       {
         label: 'Dividend Yield',
-        value: `${quote.dividendYield.toFixed(2)}%`,
+        value:
+          quote.dividendYieldPct != null
+            ? `${quote.dividendYieldPct.toFixed(2)}%`
+            : 'N/A',
       },
     ];
   }, [quote]);
@@ -100,9 +128,15 @@ export default function StockDetailPage() {
       {!bannerDismissed ? (
         <div className="mt-4">
           <ErrorBanner
-            message="Live quote delayed — showing cached placeholder data."
+            message="Quotes and charts are for informational purposes only. Data may be delayed and is sourced from third-party feeds."
             onDismiss={() => setBannerDismissed(true)}
           />
+        </div>
+      ) : null}
+
+      {loadError ? (
+        <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {loadError}
         </div>
       ) : null}
 
@@ -170,9 +204,13 @@ export default function StockDetailPage() {
                     ) : null}
                   </LineChart>
                 </ResponsiveContainer>
-              ) : (
+              ) : detailLoading ? (
                 <div className="flex h-full items-center justify-center text-sm text-zinc-500">
                   Loading chart…
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+                  No price history for this range.
                 </div>
               )}
             </div>
