@@ -1,7 +1,34 @@
+import { SECTORS } from '../constants/sectors';
+
 export const RECOMMEND_PREFERENCES_KEY = 'smartstocks_preferences';
 
 const RISK = ['low', 'medium', 'high'];
 const GROWTH = ['growth', 'balanced', 'income'];
+const ALLOWED_SECTORS = new Set(SECTORS);
+
+/** Map pre–yfinance-alignment labels saved in localStorage to Yahoo names. */
+const LEGACY_SECTOR_LABEL = {
+  Financials: 'Financial Services',
+  'Consumer Discretionary': 'Consumer Cyclical',
+  'Consumer Staples': 'Consumer Defensive',
+  Materials: 'Basic Materials',
+};
+
+function normalizeSectorLabel(s) {
+  const t = String(s || '').trim();
+  return LEGACY_SECTOR_LABEL[t] || t;
+}
+
+function normalizeSectorsList(arr) {
+  if (!Array.isArray(arr)) return [];
+  return [
+    ...new Set(
+      arr
+        .map((s) => normalizeSectorLabel(s))
+        .filter((x) => ALLOWED_SECTORS.has(x))
+    ),
+  ];
+}
 
 export function getDefaultRecommendPreferences() {
   return {
@@ -22,7 +49,7 @@ export function loadRecommendPreferences() {
     if (!parsed || typeof parsed !== 'object') return base;
     const years = Number(parsed.investment_horizon);
     return {
-      sectors: Array.isArray(parsed.sectors) ? parsed.sectors.filter(Boolean) : [],
+      sectors: normalizeSectorsList(parsed.sectors),
       risk_tolerance: RISK.includes(parsed.risk_tolerance) ? parsed.risk_tolerance : base.risk_tolerance,
       growth_profile: GROWTH.includes(parsed.growth_profile) ? parsed.growth_profile : base.growth_profile,
       investment_horizon:
@@ -37,7 +64,7 @@ export function saveRecommendPreferences(prefs) {
   const normalized = {
     ...getDefaultRecommendPreferences(),
     ...prefs,
-    sectors: Array.isArray(prefs.sectors) ? prefs.sectors.filter(Boolean) : [],
+    sectors: normalizeSectorsList(prefs.sectors),
     risk_tolerance: RISK.includes(prefs.risk_tolerance) ? prefs.risk_tolerance : 'medium',
     growth_profile: GROWTH.includes(prefs.growth_profile) ? prefs.growth_profile : 'balanced',
     investment_horizon: (() => {

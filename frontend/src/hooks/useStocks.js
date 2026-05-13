@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { postRecommend, getStockQuote } from '../api/api';
-import { WATCHLIST_PLACEHOLDER } from '../constants/placeholderData';
 import { loadRecommendPreferences } from '../utils/recommendPreferences';
 
 /**
@@ -67,7 +66,6 @@ export function useStocks() {
 
   return {
     recommendations,
-    watchlistItems: WATCHLIST_PLACEHOLDER,
     isLoading,
     error,
   };

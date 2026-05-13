@@ -30,7 +30,7 @@ export default function StockDetailPage() {
   const [loadError, setLoadError] = useState(null);
   const [detailLoading, setDetailLoading] = useState(true);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [savedFlash, setSavedFlash] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,9 +110,13 @@ export default function StockDetailPage() {
   }, [quote]);
 
   async function handleSaveWatchlist() {
-    await addFavorite(ticker);
-    setSavedFlash(true);
-    window.setTimeout(() => setSavedFlash(false), 2200);
+    try {
+      const r = await addFavorite(ticker);
+      setSavedFlash(r.added ? 'saved' : 'already');
+    } catch {
+      setSavedFlash('error');
+    }
+    window.setTimeout(() => setSavedFlash(null), 2200);
   }
 
   return (
@@ -266,7 +270,13 @@ export default function StockDetailPage() {
             onClick={handleSaveWatchlist}
             className="mt-6 w-full rounded-lg bg-blue-500 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
-            {savedFlash ? 'Saved to watchlist' : 'Save to Watchlist'}
+            {savedFlash === 'saved'
+              ? 'Saved to watchlist'
+              : savedFlash === 'already'
+                ? 'Already on watchlist'
+                : savedFlash === 'error'
+                  ? 'Could not save'
+                  : 'Save to Watchlist'}
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import SparklineChart from '../components/SparklineChart';
-import { useStocks } from '../hooks/useStocks';
+import { useWatchlist } from '../hooks/useWatchlist';
 
 function formatChange(pct) {
   const sign = pct >= 0 ? '+' : '';
@@ -9,7 +9,7 @@ function formatChange(pct) {
 }
 
 export default function WatchlistPage() {
-  const { watchlistItems } = useStocks();
+  const { watchlistItems, isLoading, error } = useWatchlist();
   const [searchParams] = useSearchParams();
   const demoEmpty = searchParams.get('empty') === '1';
   const [sortBy, setSortBy] = useState('name');
@@ -26,12 +26,21 @@ export default function WatchlistPage() {
     return copy;
   }, [items, sortBy]);
 
+  if (!demoEmpty && isLoading && items.length === 0) {
+    return (
+      <div className="min-h-full">
+        <h1 className="text-xl font-semibold text-white md:text-2xl">Watchlist</h1>
+        <p className="mt-8 text-center text-sm text-zinc-500">Loading saved symbols…</p>
+      </div>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-zinc-700 bg-zinc-900/50 px-6 py-16 text-center">
         <p className="text-lg font-medium text-white">No stocks saved yet</p>
         <p className="mt-2 max-w-sm text-sm text-zinc-400">
-          Browse recommendations on the dashboard and save names you want to track.
+          Open a stock and use &quot;Save to Watchlist&quot; to store it in this browser.
         </p>
         <Link
           to="/dashboard"
@@ -45,6 +54,11 @@ export default function WatchlistPage() {
 
   return (
     <div className="min-h-full">
+      {error ? (
+        <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          {error}
+        </div>
+      ) : null}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-white md:text-2xl">Watchlist</h1>

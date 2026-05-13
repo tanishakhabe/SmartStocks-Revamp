@@ -1,16 +1,6 @@
-import {
-  PORTFOLIO_DEFAULT_HOLDINGS,
-  SECTOR_BAR_DATA,
-  SECTOR_SCATTER_DATA,
-  SECTOR_TABLE_ROWS,
-  WATCHLIST_PLACEHOLDER,
-  generateCumulativeReturns,
-} from '../constants/placeholderData';
-import { SECTORS } from '../constants/sectors';
+import { addWatchlistTicker, removeWatchlistTicker } from '../utils/watchlistStorage';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-const delay = (ms = 180) => new Promise((r) => setTimeout(r, ms));
 
 /** Wraps fetch; turns opaque network/CORS failures into a clearer message. */
 async function apiFetch(input, init) {
@@ -30,10 +20,6 @@ async function apiFetch(input, init) {
     }
     throw e;
   }
-}
-
-function clone(data) {
-  return JSON.parse(JSON.stringify(data));
 }
 
 /** Calendar-day windows used to slice daily history returned by the API (currently up to ~3mo). */
@@ -151,41 +137,26 @@ export async function postRecommend(body) {
   return list;
 }
 
-export function getSectors() {
-  return delay().then(() =>
-    clone({
-      sectors: SECTORS,
-      bar: SECTOR_BAR_DATA,
-      scatter: SECTOR_SCATTER_DATA,
-      table: SECTOR_TABLE_ROWS,
-    })
-  );
-}
-
-export function runPortfolio(weights) {
-  return delay(240).then(() =>
-    clone({
-      weights,
-      totalReturnPct: 23.4,
-      annualizedVolatilityPct: 18.2,
-      sharpeRatio: 1.28,
-      cumulativeReturns: generateCumulativeReturns(36),
-      holdings: PORTFOLIO_DEFAULT_HOLDINGS.map((h) => ({
-        ...h,
-        contributionPct: h.weight * 0.22,
-      })),
-    })
-  );
-}
-
+/** Persists ticker to localStorage watchlist (client-only). */
 export function addFavorite(ticker) {
-  const upper = String(ticker || '').toUpperCase();
-  return delay().then(() =>
-    clone({ ok: true, ticker: upper, savedAt: new Date().toISOString() })
-  );
+  const upper = String(ticker || '').trim().toUpperCase();
+  if (!upper) {
+    return Promise.reject(new Error('Missing ticker'));
+  }
+  const added = addWatchlistTicker(upper);
+  return Promise.resolve({
+    ok: true,
+    ticker: upper,
+    added,
+    savedAt: new Date().toISOString(),
+  });
 }
 
 export function removeFavorite(ticker) {
-  const upper = String(ticker || '').toUpperCase();
-  return delay().then(() => clone({ ok: true, ticker: upper }));
+  const upper = String(ticker || '').trim().toUpperCase();
+  if (!upper) {
+    return Promise.reject(new Error('Missing ticker'));
+  }
+  removeWatchlistTicker(upper);
+  return Promise.resolve({ ok: true, ticker: upper });
 }
